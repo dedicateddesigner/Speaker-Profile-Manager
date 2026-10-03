@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Speaker Profile Manager
  * Description: Manage speakers, sponsors and media partners with Elementor marquee widgets.
- * Version: 1.4.2
+ * Version: 1.4.3
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.4.2');
+define('SPM_VERSION', '1.4.3');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
@@ -329,7 +329,7 @@ function spm_register_partner_widgets($widgets_manager) {
                     $this->add_responsive_control('card_height',array('label'=>__('Card Height','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>180,'max'=>600)),'default'=>array('unit'=>'px','size'=>330),'tablet_default'=>array('unit'=>'px','size'=>300),'mobile_default'=>array('unit'=>'px','size'=>260),'selectors'=>array('{{WRAPPER}} .spm-sponsor-card'=>'height:{{SIZE}}{{UNIT}};')));
                     $this->add_control('edge_fade',array('label'=>__('Soften Slider Edges','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SWITCHER,'default'=>'yes'));
                     $this->add_control('edge_fade_width',array('label'=>__('Edge Fade Width (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'range'=>array('px'=>array('min'=>0,'max'=>240)),'default'=>array('unit'=>'px','size'=>70),'selectors'=>array('{{WRAPPER}} .spm-partner-marquee'=>'-webkit-mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);')));
-                    $this->add_control('gap',array('label'=>__('Gap (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>0,'max'=>80)),'default'=>array('unit'=>'px','size'=>24),'selectors'=>array('{{WRAPPER}} .spm-marquee-track'=>'gap:{{SIZE}}{{UNIT}};')));
+                    $this->add_control('gap',array('label'=>__('Gap (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>0,'max'=>80)),'default'=>array('unit'=>'px','size'=>24),'selectors'=>array('{{WRAPPER}} .spm-marquee-group'=>'gap:{{SIZE}}{{UNIT}};')));
                     $this->add_control('accent',array('label'=>__('Tier Footer Color','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::COLOR,'default'=>'#62d83e','selectors'=>array('{{WRAPPER}} .spm-partner-tier'=>'background:{{VALUE}};')));
                     $this->end_controls_section();
                 }
@@ -352,7 +352,7 @@ function spm_register_partner_widgets($widgets_manager) {
                     $this->add_responsive_control('tile_height',array('label'=>__('Logo Tile Height','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>60,'max'=>260)),'default'=>array('unit'=>'px','size'=>110),'tablet_default'=>array('unit'=>'px','size'=>100),'mobile_default'=>array('unit'=>'px','size'=>85),'selectors'=>array('{{WRAPPER}} .spm-media-tile'=>'height:{{SIZE}}{{UNIT}};')));
                     $this->add_control('edge_fade',array('label'=>__('Soften Slider Edges','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SWITCHER,'default'=>'yes'));
                     $this->add_control('edge_fade_width',array('label'=>__('Edge Fade Width (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'range'=>array('px'=>array('min'=>0,'max'=>240)),'default'=>array('unit'=>'px','size'=>70),'selectors'=>array('{{WRAPPER}} .spm-partner-marquee'=>'-webkit-mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);')));
-                    $this->add_control('gap',array('label'=>__('Gap (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>0,'max'=>80)),'default'=>array('unit'=>'px','size'=>24),'selectors'=>array('{{WRAPPER}} .spm-marquee-track'=>'gap:{{SIZE}}{{UNIT}};')));
+                    $this->add_control('gap',array('label'=>__('Gap (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>0,'max'=>80)),'default'=>array('unit'=>'px','size'=>24),'selectors'=>array('{{WRAPPER}} .spm-marquee-group'=>'gap:{{SIZE}}{{UNIT}};')));
                     $this->end_controls_section();
                 }
                 protected function render(){spm_render_partner_marquee('spm_media_partner',$this->get_settings_for_display(),false);}
@@ -367,15 +367,21 @@ function spm_render_partner_marquee($post_type,$settings,$sponsor) {
     $direction=($settings['direction']??'left')==='right'?'reverse':'normal';
     $duration=max(5,absint($settings['speed']??28));
     $pause=($settings['pause_hover']??'yes')==='yes'?' is-pause-hover':'';
-    echo '<div class="spm-marquee spm-partner-marquee'.$pause.'" style="--spm-duration:'.esc_attr($duration).'s;--spm-direction:'.esc_attr($direction).';"><div class="spm-marquee-track">';
-    foreach(array(0,1) as $copy) foreach($q->posts as $item) {
-        $logo=absint(get_post_meta($item->ID,'_spm_partner_logo',true)); $title=get_the_title($item->ID); $tier=get_post_meta($item->ID,'_spm_partner_tier',true); $url=get_post_meta($item->ID,'_spm_partner_url',true);
-        echo '<div class="spm-marquee-item" aria-hidden="'.($copy?'true':'false').'">';
-        $inner='<div class="spm-partner-card '.($sponsor?'spm-sponsor-card':'spm-media-tile').'">';
-        if($logo) $inner.='<div class="spm-partner-logo">'.wp_get_attachment_image($logo,'large',false,array('loading'=>'lazy')).'</div>';
-        if($sponsor && $tier) $inner.='<div class="spm-partner-tier">'.esc_html($tier).'</div>';
-        $inner.='</div>';
-        if($url) echo '<a class="spm-partner-link" href="'.esc_url($url).'" target="_blank" rel="noopener noreferrer">'.$inner.'</a>'; else echo $inner;
+    $g1=sanitize_hex_color($settings['tier_gradient_start']??'#36cf2d') ?: '#36cf2d';
+    $g2=sanitize_hex_color($settings['tier_gradient_end']??'#82e34b') ?: '#82e34b';
+    echo '<div class="spm-marquee spm-partner-marquee'.$pause.'" style="--spm-duration:'.esc_attr($duration).'s;--spm-direction:'.esc_attr($direction).';--spm-tier-start:'.esc_attr($g1).';--spm-tier-end:'.esc_attr($g2).';"><div class="spm-marquee-track">';
+    foreach(array(0,1) as $copy) {
+        echo '<div class="spm-marquee-group" aria-hidden="'.($copy?'true':'false').'">';
+        foreach($q->posts as $item) {
+            $logo=absint(get_post_meta($item->ID,'_spm_partner_logo',true)); $title=get_the_title($item->ID); $tier=get_post_meta($item->ID,'_spm_partner_tier',true); $url=get_post_meta($item->ID,'_spm_partner_url',true);
+            echo '<div class="spm-marquee-item">';
+            $inner='<div class="spm-partner-card '.($sponsor?'spm-sponsor-card':'spm-media-tile').'">';
+            if($logo) $inner.='<div class="spm-partner-logo">'.wp_get_attachment_image($logo,'large',false,array('loading'=>'lazy')).'</div>';
+            if($sponsor && $tier) $inner.='<div class="spm-partner-tier">'.esc_html($tier).'</div>';
+            $inner.='</div>';
+            if($url) echo '<a class="spm-partner-link" href="'.esc_url($url).'" target="_blank" rel="noopener noreferrer">'.$inner.'</a>'; else echo $inner;
+            echo '</div>';
+        }
         echo '</div>';
     }
     echo '</div></div>'; wp_reset_postdata();

@@ -1,6 +1,6 @@
 # Speaker Profile Manager
 
-Version 1.4.2
+Version 1.4.3
 
 Manage speaker profiles, sponsors and media partners, and display them with Elementor widgets.
 
@@ -27,3 +27,7 @@ Sponsor Marquee includes responsive Card Height; Media Partners Marquee includes
 
 ### v1.4.2
 Sponsor cards use a 3:1 logo-to-tier area, configurable two-color footer gradient, and logo zoom on hover.
+
+
+### v1.4.3
+Fixed sponsor and media partner marquee continuity by grouping each repeated sequence and animating exactly one sequence width.
