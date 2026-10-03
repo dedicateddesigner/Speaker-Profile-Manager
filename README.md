@@ -1,6 +1,6 @@
 # Speaker Profile Manager
 
-Version 1.4.0
+Version 1.4.2
 
 Manage speaker profiles, sponsors and media partners, and display them with Elementor widgets.
 
@@ -20,3 +20,10 @@ Both partner marquee widgets include direction (Right to Left / Left to Right), 
 Install over Speaker Profile Manager 1.3.1 using the same plugin slug. Existing speaker post type and metadata keys are preserved. WordPress may ask to confirm replacement of the installed plugin.
 
 Requires WordPress 6.0+, PHP 7.4+, and Elementor for the widgets.
+
+### Partner widget layout controls
+Sponsor Marquee includes responsive Card Height; Media Partners Marquee includes responsive Logo Tile Height. Both include a soft edge-fade width control. Set the fade width to 0 for a hard edge.
+
+
+### v1.4.2
+Sponsor cards use a 3:1 logo-to-tier area, configurable two-color footer gradient, and logo zoom on hover.

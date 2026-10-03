@@ -13,3 +13,15 @@
 .spm-partner-marquee .spm-media-tile{flex:0 0 220px;max-width:calc(100vw - 32px)}
 @media(max-width:1024px){.spm-partner-marquee .spm-sponsor-card{width:280px;flex-basis:280px}.spm-partner-marquee .spm-media-tile{width:180px;flex-basis:180px}}
 @media(max-width:767px){.spm-partner-marquee .spm-sponsor-card{width:240px;flex-basis:240px}.spm-partner-marquee .spm-media-tile{width:150px;flex-basis:150px}}
+
+/* Responsive partner card/tile height defaults; Elementor controls override per breakpoint. */
+.spm-partner-marquee .spm-sponsor-card{box-sizing:border-box}
+.spm-partner-marquee .spm-media-tile{box-sizing:border-box}
+
+/* v1.4.2 sponsor proportions, gradient footer, and hover zoom */
+.spm-sponsor-card{display:flex;flex-direction:column}
+.spm-sponsor-card .spm-partner-logo{flex:0 0 75%;height:75%;min-height:0;box-sizing:border-box;overflow:hidden}
+.spm-sponsor-card .spm-partner-tier{flex:0 0 25%;height:25%;min-height:0;box-sizing:border-box;background:linear-gradient(110deg,var(--spm-tier-start,#36cf2d),var(--spm-tier-end,#82e34b))}
+.spm-sponsor-card .spm-partner-logo img{transition:transform .35s ease;transform:scale(1)}
+.spm-sponsor-card:hover .spm-partner-logo img{transform:scale(1.10)}
+@media(prefers-reduced-motion:reduce){.spm-sponsor-card .spm-partner-logo img{transition:none}}

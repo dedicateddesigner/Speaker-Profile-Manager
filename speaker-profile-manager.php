@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Speaker Profile Manager
  * Description: Manage speakers, sponsors and media partners with Elementor marquee widgets.
- * Version: 1.4.0
+ * Version: 1.4.2
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.4.0');
+define('SPM_VERSION', '1.4.2');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
@@ -326,6 +326,9 @@ function spm_register_partner_widgets($widgets_manager) {
                     $this->add_control('direction',array('label'=>__('Direction','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SELECT,'options'=>array('left'=>__('Right to Left','speaker-profile-manager'),'right'=>__('Left to Right','speaker-profile-manager')),'default'=>'left'));
                     $this->add_control('pause_hover',array('label'=>__('Pause on Hover','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SWITCHER,'default'=>'yes'));
                     $this->add_control('card_width',array('label'=>__('Card Width (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>160,'max'=>600)),'default'=>array('unit'=>'px','size'=>320),'selectors'=>array('{{WRAPPER}} .spm-partner-card'=>'width:{{SIZE}}{{UNIT}};')));
+                    $this->add_responsive_control('card_height',array('label'=>__('Card Height','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>180,'max'=>600)),'default'=>array('unit'=>'px','size'=>330),'tablet_default'=>array('unit'=>'px','size'=>300),'mobile_default'=>array('unit'=>'px','size'=>260),'selectors'=>array('{{WRAPPER}} .spm-sponsor-card'=>'height:{{SIZE}}{{UNIT}};')));
+                    $this->add_control('edge_fade',array('label'=>__('Soften Slider Edges','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SWITCHER,'default'=>'yes'));
+                    $this->add_control('edge_fade_width',array('label'=>__('Edge Fade Width (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'range'=>array('px'=>array('min'=>0,'max'=>240)),'default'=>array('unit'=>'px','size'=>70),'selectors'=>array('{{WRAPPER}} .spm-partner-marquee'=>'-webkit-mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);')));
                     $this->add_control('gap',array('label'=>__('Gap (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>0,'max'=>80)),'default'=>array('unit'=>'px','size'=>24),'selectors'=>array('{{WRAPPER}} .spm-marquee-track'=>'gap:{{SIZE}}{{UNIT}};')));
                     $this->add_control('accent',array('label'=>__('Tier Footer Color','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::COLOR,'default'=>'#62d83e','selectors'=>array('{{WRAPPER}} .spm-partner-tier'=>'background:{{VALUE}};')));
                     $this->end_controls_section();
@@ -346,6 +349,9 @@ function spm_register_partner_widgets($widgets_manager) {
                     $this->add_control('direction',array('label'=>__('Direction','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SELECT,'options'=>array('left'=>__('Right to Left','speaker-profile-manager'),'right'=>__('Left to Right','speaker-profile-manager')),'default'=>'left'));
                     $this->add_control('pause_hover',array('label'=>__('Pause on Hover','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SWITCHER,'default'=>'yes'));
                     $this->add_control('logo_width',array('label'=>__('Logo Tile Width (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>100,'max'=>400)),'default'=>array('unit'=>'px','size'=>220),'selectors'=>array('{{WRAPPER}} .spm-media-tile'=>'width:{{SIZE}}{{UNIT}};')));
+                    $this->add_responsive_control('tile_height',array('label'=>__('Logo Tile Height','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>60,'max'=>260)),'default'=>array('unit'=>'px','size'=>110),'tablet_default'=>array('unit'=>'px','size'=>100),'mobile_default'=>array('unit'=>'px','size'=>85),'selectors'=>array('{{WRAPPER}} .spm-media-tile'=>'height:{{SIZE}}{{UNIT}};')));
+                    $this->add_control('edge_fade',array('label'=>__('Soften Slider Edges','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SWITCHER,'default'=>'yes'));
+                    $this->add_control('edge_fade_width',array('label'=>__('Edge Fade Width (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'range'=>array('px'=>array('min'=>0,'max'=>240)),'default'=>array('unit'=>'px','size'=>70),'selectors'=>array('{{WRAPPER}} .spm-partner-marquee'=>'-webkit-mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 {{SIZE}}px,#000 calc(100% - {{SIZE}}px),transparent 100%);')));
                     $this->add_control('gap',array('label'=>__('Gap (px)','speaker-profile-manager'),'type'=>\Elementor\Controls_Manager::SLIDER,'size_units'=>array('px'),'range'=>array('px'=>array('min'=>0,'max'=>80)),'default'=>array('unit'=>'px','size'=>24),'selectors'=>array('{{WRAPPER}} .spm-marquee-track'=>'gap:{{SIZE}}{{UNIT}};')));
                     $this->end_controls_section();
                 }
