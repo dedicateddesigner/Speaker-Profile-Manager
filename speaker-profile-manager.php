@@ -142,7 +142,7 @@ add_action('save_post_spm_speaker', 'spm_save_speaker_meta');
 
 function spm_admin_assets($hook) {
     $screen = get_current_screen();
-    if (!$screen || $screen->post_type !== 'spm_speaker') return;
+    if (!$screen || !in_array($screen->post_type, array('spm_speaker','spm_sponsor','spm_media_partner'), true)) return;
     if ($hook === 'post.php' || $hook === 'post-new.php') wp_enqueue_media();
     wp_enqueue_script('spm-admin', SPM_URL . 'assets/admin.js', array('jquery'), SPM_VERSION, true);
     if ($hook === 'edit.php') wp_enqueue_script('spm-quick-edit', SPM_URL . 'assets/quick-edit.js', array('jquery','inline-edit-post'), SPM_VERSION, true);
