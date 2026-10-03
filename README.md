@@ -1,23 +1,25 @@
-# Speaker Profile Manager
+# Speaker Profile Manager v1.3.0
 
-WordPress speaker CPT with Elementor Dynamic Tags and manual display ordering.
+Adds an Elementor **Speaker Marquee** widget while retaining the speaker CPT, metadata, Elementor Dynamic Tags, numeric display order and Quick Edit.
 
-## Version 1.2.0
-- Speaker Name, Title, Company, Logo, Ring Color fields.
-- Speaker Display Order field (1 is first).
-- Display Order editable in the speaker editor and WordPress Quick Edit.
-- Admin Order column is sortable.
-- Elementor Loop Grid query ID `speaker_listing` sorts ascending by Display Order.
-- Elementor Dynamic Tags for speaker text fields and company logo image.
+## Requirements
+- WordPress 6.0+
+- PHP 7.4+
+- Elementor (free) for the widget; Elementor Pro is not required for the built-in card.
 
-## Update
-Back up the existing plugin folder/site, then replace the plugin files. Keep the existing plugin folder name and do not delete speaker posts. Existing speaker metadata remains.
+## Install
+Back up the site and existing plugin folder. Replace the plugin files with this package, keeping the plugin folder name. Activate/update the plugin, then open Elementor and search for **Speaker Marquee**.
 
-## Set ordering
-In Speakers list, use Quick Edit and enter Display Order (1, 2, 3...). Or edit a speaker and set Display Order in Speaker Information. Use unique numbers for predictable order.
+## Speaker records
+Create records under Speakers. Set portrait using Featured Image; enter Speaker Name, Title/Designation, Company Name, Company Logo, and Display Order. The logo source may be 600 × 300 px.
 
-## Elementor Loop Grid
-Set Query ID to `speaker_listing`. Set Items Per Page to 6 and pagination to Load on Click / Load More. The plugin query orders speaker cards by Display Order ascending.
+## Elementor widget
+- Built-in speaker card by default.
+- Optional saved Elementor template selection.
+- Number of speakers, card width, gap, speed, direction, pause on hover, background, and accent controls.
+- One speaker is rendered as a centered static card with constrained width.
+- Two or more speakers render as a continuous marquee, ordered by Display Order.
+- For a saved card template, create an Elementor Template first, use Speaker Profile Manager Dynamic Tags for name/title/company/logo, then select it in the widget.
 
-## Company logo
-Use the Speaker Company Logo dynamic tag on an Image widget. A 600 × 300 px source is suitable; set Object Fit to Contain.
+## Notes
+The template option renders the saved Elementor template once for each speaker while setting the current post context. Verify your particular template widgets/dynamic tags on staging before publishing. Marquee animation respects reduced-motion preferences.
