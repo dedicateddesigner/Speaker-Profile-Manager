@@ -1,6 +1,6 @@
 # Speaker Profile Manager
 
-Version 1.4.3
+Version 1.4.4
 
 Manage speaker profiles, sponsors and media partners, and display them with Elementor widgets.
 
@@ -31,3 +31,7 @@ Sponsor cards use a 3:1 logo-to-tier area, configurable two-color footer gradien
 
 ### v1.4.3
 Fixed sponsor and media partner marquee continuity by grouping each repeated sequence and animating exactly one sequence width.
+
+
+### v1.4.4
+Fixes empty marquee gaps on wide viewports by rendering five equal partner sequences and moving exactly one sequence per animation cycle.

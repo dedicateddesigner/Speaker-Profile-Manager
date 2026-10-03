@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Speaker Profile Manager
  * Description: Manage speakers, sponsors and media partners with Elementor marquee widgets.
- * Version: 1.4.3
+ * Version: 1.4.4
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.4.3');
+define('SPM_VERSION', '1.4.4');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
@@ -370,7 +370,7 @@ function spm_render_partner_marquee($post_type,$settings,$sponsor) {
     $g1=sanitize_hex_color($settings['tier_gradient_start']??'#36cf2d') ?: '#36cf2d';
     $g2=sanitize_hex_color($settings['tier_gradient_end']??'#82e34b') ?: '#82e34b';
     echo '<div class="spm-marquee spm-partner-marquee'.$pause.'" style="--spm-duration:'.esc_attr($duration).'s;--spm-direction:'.esc_attr($direction).';--spm-tier-start:'.esc_attr($g1).';--spm-tier-end:'.esc_attr($g2).';"><div class="spm-marquee-track">';
-    foreach(array(0,1) as $copy) {
+    foreach(array(0,1,2,3,4) as $copy) {
         echo '<div class="spm-marquee-group" aria-hidden="'.($copy?'true':'false').'">';
         foreach($q->posts as $item) {
             $logo=absint(get_post_meta($item->ID,'_spm_partner_logo',true)); $title=get_the_title($item->ID); $tier=get_post_meta($item->ID,'_spm_partner_tier',true); $url=get_post_meta($item->ID,'_spm_partner_url',true);
