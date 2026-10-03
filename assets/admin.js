@@ -1,59 +1,26 @@
-
-jQuery(document).ready(function ($) {
-
-    let mediaUploader;
-
+jQuery(function ($) {
+    let picker;
     $('#spm_upload_logo').on('click', function (e) {
-
         e.preventDefault();
-
-        if (mediaUploader) {
-            mediaUploader.open();
-            return;
-        }
-
-        mediaUploader = wp.media({
+        if (picker) { picker.open(); return; }
+        picker = wp.media({
             title: 'Select Company Logo',
-            button: {
-                text: 'Use This Logo'
-            },
+            button: { text: 'Use This Logo' },
             multiple: false,
-            library: {
-                type: 'image'
-            }
+            library: { type: 'image' }
         });
-
-        mediaUploader.on('select', function () {
-
-            const attachment = mediaUploader
-                .state()
-                .get('selection')
-                .first()
-                .toJSON();
-
-            $('#spm_speaker_company_logo').val(attachment.id);
-
-            $('#spm_logo_preview')
-                .attr('src', attachment.url)
-                .show();
-
+        picker.on('select', function () {
+            const file = picker.state().get('selection').first().toJSON();
+            $('#spm_speaker_company_logo').val(file.id);
+            $('#spm_logo_preview').attr('src', file.url).show();
             $('#spm_remove_logo').show();
         });
-
-        mediaUploader.open();
+        picker.open();
     });
-
     $('#spm_remove_logo').on('click', function (e) {
-
         e.preventDefault();
-
         $('#spm_speaker_company_logo').val('');
-
-        $('#spm_logo_preview')
-            .attr('src', '')
-            .hide();
-
+        $('#spm_logo_preview').attr('src', '').hide();
         $(this).hide();
     });
-
 });

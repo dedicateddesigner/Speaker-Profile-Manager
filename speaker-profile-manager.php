@@ -1,458 +1,230 @@
 <?php
-
 /**
  * Plugin Name: Speaker Profile Manager
- * Description: Manage speaker profiles with Elementor Loop Grid compatibility.
- * Version: 1.0.0
+ * Description: Manage speaker profiles and expose speaker fields as Elementor Dynamic Tags.
+ * Version: 1.1.0
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
+ * Requires at least: 6.0
+ * Requires PHP: 7.4
  */
+if (!defined('ABSPATH')) exit;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
-
-define('SPM_VERSION', '1.0.0');
-define('SPM_PATH', plugin_dir_path(__FILE__));
+define('SPM_VERSION', '1.1.0');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
-/**
- * Register Speaker Custom Post Type
- */
-function spm_register_speaker_cpt()
-{
-
-    $labels = array(
-        'name'               => 'Speakers',
-        'singular_name'      => 'Speaker',
-        'menu_name'          => 'Speakers',
-        'add_new'            => 'Add Speaker',
-        'add_new_item'       => 'Add New Speaker',
-        'edit_item'          => 'Edit Speaker',
-        'new_item'           => 'New Speaker',
-        'view_item'          => 'View Speaker',
-        'search_items'       => 'Search Speakers',
-        'not_found'          => 'No speakers found',
-        'not_found_in_trash' => 'No speakers found in Trash',
-    );
-
+function spm_register_speaker_cpt() {
     register_post_type('spm_speaker', array(
-        'labels'             => $labels,
-        'public'             => true,
-        'show_in_rest'       => true,
-        'menu_icon'          => 'dashicons-groups',
-        'menu_position'      => 20,
-        'supports'           => array(
-            'title',
-            'thumbnail',
-            'revisions',
+        'labels' => array(
+            'name' => __('Speakers', 'speaker-profile-manager'),
+            'singular_name' => __('Speaker', 'speaker-profile-manager'),
+            'menu_name' => __('Speakers', 'speaker-profile-manager'),
+            'add_new_item' => __('Add New Speaker', 'speaker-profile-manager'),
+            'edit_item' => __('Edit Speaker', 'speaker-profile-manager'),
         ),
-        'has_archive'        => true,
-        'rewrite'            => array(
-            'slug' => 'speakers',
-            'with_front' => false,
-        ),
-        'publicly_queryable' => true,
-        'exclude_from_search' => false,
+        'public' => true,
+        'show_in_rest' => true,
+        'menu_icon' => 'dashicons-groups',
+        'menu_position' => 20,
+        'supports' => array('title', 'thumbnail', 'revisions'),
+        'has_archive' => true,
+        'rewrite' => array('slug' => 'speakers', 'with_front' => false),
     ));
 }
 add_action('init', 'spm_register_speaker_cpt');
 
-
-/**
- * Register custom fields
- */
-function spm_register_meta_fields()
-{
-
-    $fields = array(
+function spm_register_meta_fields() {
+    foreach (array(
         '_speaker_name' => 'string',
         '_speaker_title' => 'string',
         '_speaker_company' => 'string',
         '_speaker_company_logo' => 'integer',
         '_speaker_ring_color' => 'string',
-    );
-
-    foreach ($fields as $key => $type) {
-
+    ) as $key => $type) {
         register_post_meta('spm_speaker', $key, array(
-            'type'              => $type,
-            'single'            => true,
-            'show_in_rest'      => true,
+            'type' => $type,
+            'single' => true,
+            'show_in_rest' => true,
             'sanitize_callback' => 'spm_sanitize_meta',
-            'auth_callback'     => function () {
-                return current_user_can('edit_posts');
-            },
+            'auth_callback' => function () { return current_user_can('edit_posts'); },
         ));
     }
 }
 add_action('init', 'spm_register_meta_fields');
 
-
-/**
- * Sanitize meta values
- */
-function spm_sanitize_meta($value)
-{
-
-    if (is_array($value) || is_object($value)) {
-        return '';
-    }
-
-    return sanitize_text_field($value);
+function spm_sanitize_meta($value) {
+    return (is_scalar($value) ? sanitize_text_field((string) $value) : '');
 }
 
-
-/**
- * Add Speaker Details Meta Box
- */
-function spm_add_meta_box()
-{
-
-    add_meta_box(
-        'spm_speaker_details',
-        'Speaker Information',
-        'spm_render_meta_box',
-        'spm_speaker',
-        'normal',
-        'high'
-    );
+function spm_add_meta_box() {
+    add_meta_box('spm_speaker_details', __('Speaker Information', 'speaker-profile-manager'), 'spm_render_meta_box', 'spm_speaker', 'normal', 'high');
 }
 add_action('add_meta_boxes', 'spm_add_meta_box');
 
-
-/**
- * Render Meta Box
- */
-function spm_render_meta_box($post)
-{
-
+function spm_render_meta_box($post) {
     wp_nonce_field('spm_save_speaker', 'spm_speaker_nonce');
-
-    $speaker_name = get_post_meta($post->ID, '_speaker_name', true);
-    $speaker_title = get_post_meta($post->ID, '_speaker_title', true);
+    $name = get_post_meta($post->ID, '_speaker_name', true);
+    $title = get_post_meta($post->ID, '_speaker_title', true);
     $company = get_post_meta($post->ID, '_speaker_company', true);
-    $company_logo = get_post_meta($post->ID, '_speaker_company_logo', true);
-    $ring_color = get_post_meta($post->ID, '_speaker_ring_color', true);
-
-    if (!$ring_color) {
-        $ring_color = '#A4D600';
-    }
-
-    $logo_url = $company_logo
-        ? wp_get_attachment_image_url($company_logo, 'medium')
-        : '';
-?>
-
+    $logo = absint(get_post_meta($post->ID, '_speaker_company_logo', true));
+    $color = get_post_meta($post->ID, '_speaker_ring_color', true) ?: '#A4D600';
+    $logo_url = $logo ? wp_get_attachment_image_url($logo, 'medium') : '';
+    ?>
     <style>
-        .spm-field {
-            margin-bottom: 22px;
-        }
-
-        .spm-field label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 7px;
-        }
-
-        .spm-field input[type="text"],
-        .spm-field textarea {
-            width: 100%;
-            max-width: 650px;
-        }
-
-        .spm-logo-preview {
-            display: block;
-            max-width: 160px;
-            max-height: 100px;
-            margin: 10px 0;
-            object-fit: contain;
-        }
-
-        .spm-help {
-            color: #646970;
-            font-size: 12px;
-        }
+    .spm-field{margin:0 0 22px}.spm-field label{display:block;font-weight:600;margin-bottom:7px}
+    .spm-field input[type=text],.spm-field textarea{width:100%;max-width:650px}
+    .spm-logo-preview{display:block;max-width:240px;max-height:120px;margin:10px 0;object-fit:contain}
+    .spm-help{color:#646970;font-size:12px}
     </style>
-
     <div class="spm-field">
-        <label for="spm_speaker_name">Speaker Name</label>
-        <input
-            type="text"
-            id="spm_speaker_name"
-            name="spm_speaker_name"
-            value="<?php echo esc_attr($speaker_name); ?>"
-            placeholder="Gavin John Maxwell">
+      <label for="spm_speaker_name">Speaker Name</label>
+      <input type="text" id="spm_speaker_name" name="spm_speaker_name" value="<?php echo esc_attr($name); ?>" placeholder="Gavin John Maxwell">
     </div>
-
     <div class="spm-field">
-        <label for="spm_speaker_title">Title / Designation</label>
-        <textarea
-            id="spm_speaker_title"
-            name="spm_speaker_title"
-            rows="4"
-            placeholder="Conference Chairman, Senior Principle, GBS and Business Consulting"><?php echo esc_textarea($speaker_title); ?></textarea>
+      <label for="spm_speaker_title">Title / Designation</label>
+      <textarea id="spm_speaker_title" name="spm_speaker_title" rows="4"><?php echo esc_textarea($title); ?></textarea>
     </div>
-
     <div class="spm-field">
-        <label for="spm_speaker_company">Company Name</label>
-        <input
-            type="text"
-            id="spm_speaker_company"
-            name="spm_speaker_company"
-            value="<?php echo esc_attr($company); ?>"
-            placeholder="Ernst & Young">
+      <label for="spm_speaker_company">Company Name</label>
+      <input type="text" id="spm_speaker_company" name="spm_speaker_company" value="<?php echo esc_attr($company); ?>" placeholder="Ernst & Young">
     </div>
-
     <div class="spm-field">
-        <label>Company Logo</label>
-
-        <input
-            type="hidden"
-            id="spm_speaker_company_logo"
-            name="spm_speaker_company_logo"
-            value="<?php echo esc_attr($company_logo); ?>">
-
-        <img
-            id="spm_logo_preview"
-            class="spm-logo-preview"
-            src="<?php echo esc_url($logo_url ?: ''); ?>"
-            style="<?php echo $logo_url ? '' : 'display:none;'; ?>"
-            alt="">
-
-        <button type="button" class="button" id="spm_upload_logo">
-            Select Company Logo
-        </button>
-
-        <button
-            type="button"
-            class="button"
-            id="spm_remove_logo"
-            style="<?php echo $logo_url ? '' : 'display:none;'; ?>">
-            Remove Logo
-        </button>
-
-        <p class="spm-help">
-            Upload the company logo from the WordPress Media Library.
-        </p>
+      <label>Company Logo (recommended: 600 × 300 px)</label>
+      <input type="hidden" id="spm_speaker_company_logo" name="spm_speaker_company_logo" value="<?php echo esc_attr($logo); ?>">
+      <img id="spm_logo_preview" class="spm-logo-preview" src="<?php echo esc_url($logo_url ?: ''); ?>" style="<?php echo $logo_url ? '' : 'display:none;'; ?>" alt="">
+      <button type="button" class="button" id="spm_upload_logo">Select Company Logo</button>
+      <button type="button" class="button" id="spm_remove_logo" style="<?php echo $logo_url ? '' : 'display:none;'; ?>">Remove Logo</button>
+      <p class="spm-help">Use the same logo for the speaker profile and marquee. Preserve its ratio with Object Fit: Contain in Elementor.</p>
     </div>
-
     <div class="spm-field">
-        <label for="spm_speaker_ring_color">Green Ring Color</label>
-
-        <input
-            type="color"
-            id="spm_speaker_ring_color"
-            name="spm_speaker_ring_color"
-            value="<?php echo esc_attr($ring_color); ?>">
-
-        <p class="spm-help">
-            Default color: #A4D600
-        </p>
+      <label for="spm_speaker_ring_color">Speaker Ring Color</label>
+      <input type="color" id="spm_speaker_ring_color" name="spm_speaker_ring_color" value="<?php echo esc_attr($color); ?>">
     </div>
-
-    <p class="spm-help">
-        Speaker Portrait: Use the Featured Image panel on the right.
-    </p>
-
-<?php
+    <p class="spm-help">Speaker portrait: use the Featured Image panel.</p>
+    <?php
 }
 
+function spm_save_speaker_meta($post_id) {
+    if (!isset($_POST['spm_speaker_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['spm_speaker_nonce'])), 'spm_save_speaker')) return;
+    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || wp_is_post_revision($post_id)) return;
+    if (!current_user_can('edit_post', $post_id) || get_post_type($post_id) !== 'spm_speaker') return;
 
-/**
- * Save Speaker Meta
- */
-function spm_save_speaker_meta($post_id)
-{
-
-    if (
-        !isset($_POST['spm_speaker_nonce']) ||
-        !wp_verify_nonce(
-            sanitize_text_field(wp_unslash($_POST['spm_speaker_nonce'])),
-            'spm_save_speaker'
-        )
-    ) {
-        return;
-    }
-
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-        return;
-    }
-
-    if (wp_is_post_revision($post_id)) {
-        return;
-    }
-
-    if (
-        !current_user_can('edit_post', $post_id) ||
-        get_post_type($post_id) !== 'spm_speaker'
-    ) {
-        return;
-    }
-
-    $text_fields = array(
+    foreach (array(
         'spm_speaker_name' => '_speaker_name',
         'spm_speaker_title' => '_speaker_title',
         'spm_speaker_company' => '_speaker_company',
-    );
-
-    foreach ($text_fields as $input => $meta_key) {
-
-        if (isset($_POST[$input])) {
-
-            $value = sanitize_text_field(
-                wp_unslash($_POST[$input])
-            );
-
-            update_post_meta($post_id, $meta_key, $value);
-        }
+    ) as $input => $meta_key) {
+        if (isset($_POST[$input])) update_post_meta($post_id, $meta_key, sanitize_text_field(wp_unslash($_POST[$input])));
     }
 
     if (isset($_POST['spm_speaker_company_logo'])) {
-
-        $logo_id = absint($_POST['spm_speaker_company_logo']);
-
-        if (
-            $logo_id &&
-            wp_attachment_is_image($logo_id)
-        ) {
-            update_post_meta(
-                $post_id,
-                '_speaker_company_logo',
-                $logo_id
-            );
-        } else {
-            delete_post_meta($post_id, '_speaker_company_logo');
-        }
+        $id = absint($_POST['spm_speaker_company_logo']);
+        if ($id && wp_attachment_is_image($id)) update_post_meta($post_id, '_speaker_company_logo', $id);
+        else delete_post_meta($post_id, '_speaker_company_logo');
     }
 
     if (isset($_POST['spm_speaker_ring_color'])) {
-
-        $color = sanitize_hex_color(
-            wp_unslash($_POST['spm_speaker_ring_color'])
-        );
-
-        if ($color) {
-            update_post_meta(
-                $post_id,
-                '_speaker_ring_color',
-                $color
-            );
-        }
+        $color = sanitize_hex_color(wp_unslash($_POST['spm_speaker_ring_color']));
+        if ($color) update_post_meta($post_id, '_speaker_ring_color', $color);
     }
 }
 add_action('save_post_spm_speaker', 'spm_save_speaker_meta');
 
-
-/**
- * Load WordPress Media Uploader
- */
-function spm_admin_assets($hook)
-{
-
+function spm_admin_assets() {
     $screen = get_current_screen();
-
-    if (
-        !$screen ||
-        $screen->post_type !== 'spm_speaker'
-    ) {
-        return;
-    }
-
+    if (!$screen || $screen->post_type !== 'spm_speaker') return;
     wp_enqueue_media();
-
-    wp_enqueue_script(
-        'spm-admin',
-        SPM_URL . 'assets/admin.js',
-        array('jquery'),
-        SPM_VERSION,
-        true
-    );
+    wp_enqueue_script('spm-admin', SPM_URL . 'assets/admin.js', array('jquery'), SPM_VERSION, true);
 }
 add_action('admin_enqueue_scripts', 'spm_admin_assets');
 
-
-/**
- * Speaker Admin Columns
- */
-function spm_speaker_columns($columns)
-{
-
-    $new_columns = array();
-
-    $new_columns['cb'] = $columns['cb'];
-    $new_columns['title'] = 'Post Title';
-    $new_columns['speaker_name'] = 'Speaker Name';
-    $new_columns['speaker_company'] = 'Company';
-    $new_columns['speaker_image'] = 'Portrait';
-    $new_columns['date'] = 'Date';
-
-    return $new_columns;
+function spm_speaker_columns($columns) {
+    return array(
+        'cb' => $columns['cb'] ?? '',
+        'title' => 'Post Title',
+        'speaker_name' => 'Speaker Name',
+        'speaker_company' => 'Company',
+        'speaker_image' => 'Portrait',
+        'date' => 'Date',
+    );
 }
 add_filter('manage_spm_speaker_posts_columns', 'spm_speaker_columns');
 
-
-function spm_speaker_column_content($column, $post_id)
-{
-
-    if ($column === 'speaker_name') {
-
-        echo esc_html(
-            get_post_meta($post_id, '_speaker_name', true)
-        );
-    }
-
-    if ($column === 'speaker_company') {
-
-        echo esc_html(
-            get_post_meta($post_id, '_speaker_company', true)
-        );
-    }
-
-    if ($column === 'speaker_image') {
-
-        echo get_the_post_thumbnail(
-            $post_id,
-            array(50, 50)
-        );
-    }
+function spm_speaker_column_content($column, $post_id) {
+    if ($column === 'speaker_name') echo esc_html(get_post_meta($post_id, '_speaker_name', true));
+    if ($column === 'speaker_company') echo esc_html(get_post_meta($post_id, '_speaker_company', true));
+    if ($column === 'speaker_image') echo get_the_post_thumbnail($post_id, array(50, 50));
 }
-add_action(
-    'manage_spm_speaker_posts_custom_column',
-    'spm_speaker_column_content',
-    10,
-    2
-);
-
+add_action('manage_spm_speaker_posts_custom_column', 'spm_speaker_column_content', 10, 2);
 
 /**
- * Add speaker data attributes to singular speaker pages.
- * Useful for custom CSS and frontend integrations.
+ * Elementor Dynamic Tags: text fields and company logo image.
  */
-function spm_speaker_body_class($classes)
-{
+function spm_register_elementor_dynamic_tags($dynamic_tags) {
+    if (!did_action('elementor/loaded') || !class_exists('\Elementor\Core\DynamicTags\Tag')) return;
 
-    if (is_singular('spm_speaker')) {
-        $classes[] = 'spm-single-speaker';
+    if (method_exists($dynamic_tags, 'register_group')) {
+        $dynamic_tags->register_group('spm', array('title' => __('Speaker Profile Manager', 'speaker-profile-manager')));
     }
 
-    return $classes;
+    foreach (array(
+        array('_speaker_name', 'Speaker Name'),
+        array('_speaker_title', 'Speaker Title'),
+        array('_speaker_company', 'Speaker Company'),
+        array('_speaker_ring_color', 'Speaker Ring Color'),
+    ) as $field) {
+        $dynamic_tags->register(new SPM_Elementor_Text_Tag($field[0], $field[1], $field[0]));
+    }
+
+    if (class_exists('\Elementor\Core\DynamicTags\Data_Tag')) {
+        $dynamic_tags->register(new SPM_Elementor_Company_Logo_Tag());
+    }
 }
-add_filter('body_class', 'spm_speaker_body_class');
+add_action('elementor/dynamic_tags/register', 'spm_register_elementor_dynamic_tags');
 
+if (class_exists('\Elementor\Core\DynamicTags\Tag')) {
+    class SPM_Elementor_Text_Tag extends \Elementor\Core\DynamicTags\Tag {
+        private $spm_key;
+        private $spm_label;
 
-/**
- * Flush rewrite rules on activation/deactivation
- */
-function spm_activate()
-{
+        public function __construct($key, $label, $meta_key) {
+            $this->spm_key = $meta_key;
+            $this->spm_label = $label;
+            parent::__construct();
+        }
+        public function get_name() { return 'spm-' . sanitize_key($this->spm_key); }
+        public function get_title() { return __($this->spm_label, 'speaker-profile-manager'); }
+        public function get_group() { return 'spm'; }
+        public function get_categories() { return array(\Elementor\Modules\DynamicTags\Module::TEXT_CATEGORY); }
+        public function render() {
+            $value = get_post_meta(get_the_ID(), $this->spm_key, true);
+            if ($this->spm_key === '_speaker_ring_color') $value = sanitize_hex_color($value) ?: '#A4D600';
+            echo esc_html($value);
+        }
+    }
+}
+
+if (class_exists('\Elementor\Core\DynamicTags\Data_Tag')) {
+    class SPM_Elementor_Company_Logo_Tag extends \Elementor\Core\DynamicTags\Data_Tag {
+        public function get_name() { return 'spm-company-logo'; }
+        public function get_title() { return __('Speaker Company Logo', 'speaker-profile-manager'); }
+        public function get_group() { return 'spm'; }
+        public function get_categories() { return array(\Elementor\Modules\DynamicTags\Module::IMAGE_CATEGORY); }
+        public function get_value(array $options = array()) {
+            $id = absint(get_post_meta(get_the_ID(), '_speaker_company_logo', true));
+            if (!$id || !wp_attachment_is_image($id)) return array();
+            $size = $options['size'] ?? 'full';
+            $image = wp_get_attachment_image_src($id, $size);
+            if (!$image) return array();
+            return array('id' => $id, 'url' => $image[0]);
+        }
+    }
+}
+
+function spm_activate() {
     spm_register_speaker_cpt();
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'spm_activate');
-
-function spm_deactivate()
-{
-    flush_rewrite_rules();
-}
+function spm_deactivate() { flush_rewrite_rules(); }
 register_deactivation_hook(__FILE__, 'spm_deactivate');
