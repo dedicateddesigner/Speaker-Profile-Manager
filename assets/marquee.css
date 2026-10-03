@@ -28,7 +28,7 @@
 
 /* v1.4.3 seamless partner marquee: animate one complete group, then repeat it */
 .spm-partner-marquee .spm-marquee-track{display:flex;align-items:stretch;gap:0;width:max-content;min-width:max-content;flex-wrap:nowrap;animation:spm-partner-scroll var(--spm-duration,28s) linear infinite;animation-direction:var(--spm-direction,normal)}
-.spm-partner-marquee .spm-marquee-group{display:flex;flex:0 0 auto;align-items:stretch;gap:24px;width:max-content;min-width:max-content}
+.spm-partner-marquee .spm-marquee-group{display:flex;flex:0 0 auto;align-items:stretch;gap:24px;padding-right:24px;box-sizing:content-box;width:max-content;min-width:max-content}
 .spm-partner-marquee .spm-marquee-item{display:block;flex:0 0 auto;width:auto;min-width:0}
 .spm-partner-marquee .spm-partner-link{display:block;flex:0 0 auto;text-decoration:none}
 .spm-partner-marquee .spm-partner-card{flex:0 0 auto}
@@ -36,3 +36,6 @@
 
 /* Five equal partner groups keep short lists filling wide viewports without blank gaps. */
 @keyframes spm-partner-scroll{from{transform:translateX(0)}to{transform:translateX(-20%)}}
+
+/* v1.4.5: preserve the configured card gap at every duplicated-group boundary. */
+.spm-partner-marquee .spm-marquee-group{flex-shrink:0}

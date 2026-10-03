@@ -1,6 +1,6 @@
 # Speaker Profile Manager
 
-Version 1.4.4
+Version 1.4.5
 
 Manage speaker profiles, sponsors and media partners, and display them with Elementor widgets.
 
@@ -35,3 +35,7 @@ Fixed sponsor and media partner marquee continuity by grouping each repeated seq
 
 ### v1.4.4
 Fixes empty marquee gaps on wide viewports by rendering five equal partner sequences and moving exactly one sequence per animation cycle.
+
+
+### v1.4.5
+Fixes the visible join between duplicated marquee groups by including trailing group spacing in each equal animation segment. Elementor gap control now applies to both card spacing and repeated-group boundaries.
