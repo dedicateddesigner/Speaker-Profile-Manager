@@ -3,12 +3,7 @@ jQuery(function ($) {
     $('#spm_upload_logo').on('click', function (e) {
         e.preventDefault();
         if (picker) { picker.open(); return; }
-        picker = wp.media({
-            title: 'Select Company Logo',
-            button: { text: 'Use This Logo' },
-            multiple: false,
-            library: { type: 'image' }
-        });
+        picker = wp.media({ title: 'Select Company Logo', button: { text: 'Use This Logo' }, multiple: false, library: { type: 'image' } });
         picker.on('select', function () {
             const file = picker.state().get('selection').first().toJSON();
             $('#spm_speaker_company_logo').val(file.id);

@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Speaker Profile Manager
- * Description: Manage speaker profiles and expose speaker fields as Elementor Dynamic Tags.
- * Version: 1.1.0
+ * Description: Manage speaker profiles, ordering, and Elementor Dynamic Tags.
+ * Version: 1.2.0
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.1.0');
+define('SPM_VERSION', '1.2.0');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
@@ -26,7 +26,7 @@ function spm_register_speaker_cpt() {
         'show_in_rest' => true,
         'menu_icon' => 'dashicons-groups',
         'menu_position' => 20,
-        'supports' => array('title', 'thumbnail', 'revisions'),
+        'supports' => array('title', 'thumbnail', 'revisions', 'page-attributes'),
         'has_archive' => true,
         'rewrite' => array('slug' => 'speakers', 'with_front' => false),
     ));
@@ -40,6 +40,7 @@ function spm_register_meta_fields() {
         '_speaker_company' => 'string',
         '_speaker_company_logo' => 'integer',
         '_speaker_ring_color' => 'string',
+        '_speaker_order' => 'integer',
     ) as $key => $type) {
         register_post_meta('spm_speaker', $key, array(
             'type' => $type,
@@ -53,7 +54,7 @@ function spm_register_meta_fields() {
 add_action('init', 'spm_register_meta_fields');
 
 function spm_sanitize_meta($value) {
-    return (is_scalar($value) ? sanitize_text_field((string) $value) : '');
+    return is_scalar($value) ? sanitize_text_field((string) $value) : '';
 }
 
 function spm_add_meta_box() {
@@ -68,11 +69,12 @@ function spm_render_meta_box($post) {
     $company = get_post_meta($post->ID, '_speaker_company', true);
     $logo = absint(get_post_meta($post->ID, '_speaker_company_logo', true));
     $color = get_post_meta($post->ID, '_speaker_ring_color', true) ?: '#A4D600';
+    $order = get_post_meta($post->ID, '_speaker_order', true);
     $logo_url = $logo ? wp_get_attachment_image_url($logo, 'medium') : '';
     ?>
     <style>
     .spm-field{margin:0 0 22px}.spm-field label{display:block;font-weight:600;margin-bottom:7px}
-    .spm-field input[type=text],.spm-field textarea{width:100%;max-width:650px}
+    .spm-field input[type=text],.spm-field input[type=number],.spm-field textarea{width:100%;max-width:650px}
     .spm-logo-preview{display:block;max-width:240px;max-height:120px;margin:10px 0;object-fit:contain}
     .spm-help{color:#646970;font-size:12px}
     </style>
@@ -94,11 +96,16 @@ function spm_render_meta_box($post) {
       <img id="spm_logo_preview" class="spm-logo-preview" src="<?php echo esc_url($logo_url ?: ''); ?>" style="<?php echo $logo_url ? '' : 'display:none;'; ?>" alt="">
       <button type="button" class="button" id="spm_upload_logo">Select Company Logo</button>
       <button type="button" class="button" id="spm_remove_logo" style="<?php echo $logo_url ? '' : 'display:none;'; ?>">Remove Logo</button>
-      <p class="spm-help">Use the same logo for the speaker profile and marquee. Preserve its ratio with Object Fit: Contain in Elementor.</p>
+      <p class="spm-help">Reuse this logo in the profile and marquee. Preserve its ratio with Object Fit: Contain.</p>
     </div>
     <div class="spm-field">
       <label for="spm_speaker_ring_color">Speaker Ring Color</label>
       <input type="color" id="spm_speaker_ring_color" name="spm_speaker_ring_color" value="<?php echo esc_attr($color); ?>">
+    </div>
+    <div class="spm-field">
+      <label for="spm_speaker_order">Display Order</label>
+      <input type="number" min="1" step="1" id="spm_speaker_order" name="spm_speaker_order" value="<?php echo esc_attr($order === '' ? '1' : $order); ?>">
+      <p class="spm-help">1 appears first, 2 appears second, and so on. Set unique numbers to avoid ties.</p>
     </div>
     <p class="spm-help">Speaker portrait: use the Featured Image panel.</p>
     <?php
@@ -122,19 +129,24 @@ function spm_save_speaker_meta($post_id) {
         if ($id && wp_attachment_is_image($id)) update_post_meta($post_id, '_speaker_company_logo', $id);
         else delete_post_meta($post_id, '_speaker_company_logo');
     }
-
     if (isset($_POST['spm_speaker_ring_color'])) {
         $color = sanitize_hex_color(wp_unslash($_POST['spm_speaker_ring_color']));
         if ($color) update_post_meta($post_id, '_speaker_ring_color', $color);
     }
+    if (isset($_POST['spm_speaker_order'])) {
+        update_post_meta($post_id, '_speaker_order', max(1, absint($_POST['spm_speaker_order'])));
+    }
 }
 add_action('save_post_spm_speaker', 'spm_save_speaker_meta');
 
-function spm_admin_assets() {
+function spm_admin_assets($hook) {
     $screen = get_current_screen();
     if (!$screen || $screen->post_type !== 'spm_speaker') return;
     wp_enqueue_media();
     wp_enqueue_script('spm-admin', SPM_URL . 'assets/admin.js', array('jquery'), SPM_VERSION, true);
+    if ($hook === 'edit.php') {
+        wp_enqueue_script('spm-quick-edit', SPM_URL . 'assets/quick-edit.js', array('jquery', 'inline-edit-post'), SPM_VERSION, true);
+    }
 }
 add_action('admin_enqueue_scripts', 'spm_admin_assets');
 
@@ -144,6 +156,7 @@ function spm_speaker_columns($columns) {
         'title' => 'Post Title',
         'speaker_name' => 'Speaker Name',
         'speaker_company' => 'Company',
+        'speaker_order' => 'Order',
         'speaker_image' => 'Portrait',
         'date' => 'Date',
     );
@@ -153,32 +166,67 @@ add_filter('manage_spm_speaker_posts_columns', 'spm_speaker_columns');
 function spm_speaker_column_content($column, $post_id) {
     if ($column === 'speaker_name') echo esc_html(get_post_meta($post_id, '_speaker_name', true));
     if ($column === 'speaker_company') echo esc_html(get_post_meta($post_id, '_speaker_company', true));
+    if ($column === 'speaker_order') {
+        $order = get_post_meta($post_id, '_speaker_order', true);
+        echo esc_html($order === '' ? '1' : $order);
+        echo '<div class="hidden" id="spm-order-' . esc_attr($post_id) . '">' . esc_html($order === '' ? '1' : $order) . '</div>';
+    }
     if ($column === 'speaker_image') echo get_the_post_thumbnail($post_id, array(50, 50));
 }
 add_action('manage_spm_speaker_posts_custom_column', 'spm_speaker_column_content', 10, 2);
 
-/**
- * Elementor Dynamic Tags: text fields and company logo image.
- */
+function spm_sortable_speaker_columns($columns) {
+    $columns['speaker_order'] = 'speaker_order';
+    return $columns;
+}
+add_filter('manage_edit-spm_speaker_sortable_columns', 'spm_sortable_speaker_columns');
+
+function spm_order_column_orderby($query) {
+    if (!is_admin() || !$query->is_main_query()) return;
+    if ($query->get('orderby') === 'speaker_order') {
+        $query->set('meta_key', '_speaker_order');
+        $query->set('orderby', 'meta_value_num');
+    }
+}
+add_action('pre_get_posts', 'spm_order_column_orderby');
+
+function spm_quick_edit_order_field($column_name, $post_type) {
+    if ($post_type !== 'spm_speaker' || $column_name !== 'speaker_order') return;
+    ?>
+    <fieldset class="inline-edit-col-right">
+      <div class="inline-edit-col">
+        <label>
+          <span class="title">Display Order</span>
+          <span class="input-text-wrap"><input type="number" min="1" step="1" name="spm_speaker_order" class="spm-quick-order" value=""></span>
+        </label>
+      </div>
+    </fieldset>
+    <?php
+}
+add_action('quick_edit_custom_box', 'spm_quick_edit_order_field', 10, 2);
+
+function spm_save_quick_edit_order($post_id) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!isset($_POST['spm_speaker_order'])) return;
+    if (!current_user_can('edit_post', $post_id) || get_post_type($post_id) !== 'spm_speaker') return;
+    update_post_meta($post_id, '_speaker_order', max(1, absint($_POST['spm_speaker_order'])));
+}
+add_action('save_post_spm_speaker', 'spm_save_quick_edit_order', 20);
+
 function spm_register_elementor_dynamic_tags($dynamic_tags) {
     if (!did_action('elementor/loaded') || !class_exists('\Elementor\Core\DynamicTags\Tag')) return;
-
     if (method_exists($dynamic_tags, 'register_group')) {
         $dynamic_tags->register_group('spm', array('title' => __('Speaker Profile Manager', 'speaker-profile-manager')));
     }
-
     foreach (array(
         array('_speaker_name', 'Speaker Name'),
         array('_speaker_title', 'Speaker Title'),
         array('_speaker_company', 'Speaker Company'),
         array('_speaker_ring_color', 'Speaker Ring Color'),
     ) as $field) {
-        $dynamic_tags->register(new SPM_Elementor_Text_Tag($field[0], $field[1], $field[0]));
+        $dynamic_tags->register(new SPM_Elementor_Text_Tag($field[0], $field[1]));
     }
-
-    if (class_exists('\Elementor\Core\DynamicTags\Data_Tag')) {
-        $dynamic_tags->register(new SPM_Elementor_Company_Logo_Tag());
-    }
+    if (class_exists('\Elementor\Core\DynamicTags\Data_Tag')) $dynamic_tags->register(new SPM_Elementor_Company_Logo_Tag());
 }
 add_action('elementor/dynamic_tags/register', 'spm_register_elementor_dynamic_tags');
 
@@ -186,12 +234,7 @@ if (class_exists('\Elementor\Core\DynamicTags\Tag')) {
     class SPM_Elementor_Text_Tag extends \Elementor\Core\DynamicTags\Tag {
         private $spm_key;
         private $spm_label;
-
-        public function __construct($key, $label, $meta_key) {
-            $this->spm_key = $meta_key;
-            $this->spm_label = $label;
-            parent::__construct();
-        }
+        public function __construct($key, $label) { $this->spm_key = $key; $this->spm_label = $label; parent::__construct(); }
         public function get_name() { return 'spm-' . sanitize_key($this->spm_key); }
         public function get_title() { return __($this->spm_label, 'speaker-profile-manager'); }
         public function get_group() { return 'spm'; }
@@ -203,7 +246,6 @@ if (class_exists('\Elementor\Core\DynamicTags\Tag')) {
         }
     }
 }
-
 if (class_exists('\Elementor\Core\DynamicTags\Data_Tag')) {
     class SPM_Elementor_Company_Logo_Tag extends \Elementor\Core\DynamicTags\Data_Tag {
         public function get_name() { return 'spm-company-logo'; }
@@ -213,13 +255,23 @@ if (class_exists('\Elementor\Core\DynamicTags\Data_Tag')) {
         public function get_value(array $options = array()) {
             $id = absint(get_post_meta(get_the_ID(), '_speaker_company_logo', true));
             if (!$id || !wp_attachment_is_image($id)) return array();
-            $size = $options['size'] ?? 'full';
-            $image = wp_get_attachment_image_src($id, $size);
-            if (!$image) return array();
-            return array('id' => $id, 'url' => $image[0]);
+            $image = wp_get_attachment_image_src($id, $options['size'] ?? 'full');
+            return $image ? array('id' => $id, 'url' => $image[0]) : array();
         }
     }
 }
+
+/**
+ * Elementor Loop Grid Query ID: speaker_listing.
+ * Sorts speaker cards by the numeric Display Order field, ascending.
+ */
+function spm_elementor_speaker_listing_query($query) {
+    $query->set('post_type', 'spm_speaker');
+    $query->set('meta_key', '_speaker_order');
+    $query->set('orderby', array('meta_value_num' => 'ASC', 'date' => 'DESC'));
+    $query->set('order', 'ASC');
+}
+add_action('elementor/query/speaker_listing', 'spm_elementor_speaker_listing_query');
 
 function spm_activate() {
     spm_register_speaker_cpt();
