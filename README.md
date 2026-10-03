@@ -1,4 +1,4 @@
-# Speaker Profile Manager
+# Event Profile Manager
 
 Version 1.4.5
 
@@ -17,7 +17,7 @@ Manage speaker profiles, sponsors and media partners, and display them with Elem
 Both partner marquee widgets include direction (Right to Left / Left to Right), duration, pause-on-hover, and sizing controls. Sponsor cards include a tier footer; media partners use compact logo tiles.
 
 ## Upgrade
-Install over Speaker Profile Manager 1.3.1 using the same plugin slug. Existing speaker post type and metadata keys are preserved. WordPress may ask to confirm replacement of the installed plugin.
+Install over Event Profile Manager 1.3.1 using the same plugin slug. Existing speaker post type and metadata keys are preserved. WordPress may ask to confirm replacement of the installed plugin.
 
 Requires WordPress 6.0+, PHP 7.4+, and Elementor for the widgets.
 
@@ -39,3 +39,7 @@ Fixes empty marquee gaps on wide viewports by rendering five equal partner seque
 
 ### v1.4.5
 Fixes the visible join between duplicated marquee groups by including trailing group spacing in each equal animation segment. Elementor gap control now applies to both card spacing and repeated-group boundaries.
+
+
+### v1.4.6
+Renamed the plugin display name to Event Profile Manager and explicitly maps standard WordPress post capabilities for the Speakers, Sponsors, and Media Partners post types, allowing users with the standard Editor role to manage entries.

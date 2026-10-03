@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Speaker Profile Manager
+ * Plugin Name: Event Profile Manager
  * Description: Manage speakers, sponsors and media partners with Elementor marquee widgets.
- * Version: 1.4.5
+ * Version: 1.4.6
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.4.5');
+define('SPM_VERSION', '1.4.6');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
@@ -27,6 +27,8 @@ function spm_register_speaker_cpt() {
         'menu_icon' => 'dashicons-groups',
         'menu_position' => 20,
         'supports' => array('title', 'thumbnail', 'revisions', 'page-attributes'),
+        'capability_type' => 'post',
+        'map_meta_cap' => true,
         'has_archive' => true,
         'rewrite' => array('slug' => 'speakers', 'with_front' => false),
     ));
@@ -38,7 +40,7 @@ function spm_register_partner_cpts() {
     foreach (array('spm_sponsor' => 'Sponsor', 'spm_media_partner' => 'Media Partner') as $type => $label) {
         register_post_type($type, array(
             'labels' => array('name' => __($label . 's', 'speaker-profile-manager'), 'singular_name' => __($label, 'speaker-profile-manager'), 'add_new_item' => __('Add New ' . $label, 'speaker-profile-manager')),
-            'public' => false, 'show_ui' => true, 'show_in_rest' => true,
+            'public' => false, 'show_ui' => true, 'show_in_rest' => true, 'capability_type' => 'post', 'map_meta_cap' => true,
             'menu_icon' => $type === 'spm_sponsor' ? 'dashicons-awards' : 'dashicons-megaphone',
             'supports' => array('title', 'thumbnail', 'page-attributes'),
         ));
