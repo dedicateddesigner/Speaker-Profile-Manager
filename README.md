@@ -1,25 +1,22 @@
-# Speaker Profile Manager v1.3.0
+# Speaker Profile Manager
 
-Adds an Elementor **Speaker Marquee** widget while retaining the speaker CPT, metadata, Elementor Dynamic Tags, numeric display order and Quick Edit.
+Version 1.4.0
 
-## Requirements
-- WordPress 6.0+
-- PHP 7.4+
-- Elementor (free) for the widget; Elementor Pro is not required for the built-in card.
+Manage speaker profiles, sponsors and media partners, and display them with Elementor widgets.
 
-## Install
-Back up the site and existing plugin folder. Replace the plugin files with this package, keeping the plugin folder name. Activate/update the plugin, then open Elementor and search for **Speaker Marquee**.
+## Content types
+- **Speakers**: speaker name, designation, company, company logo, portrait and numeric display order.
+- **Sponsors**: title, logo, optional tier label, optional website URL and display order.
+- **Media Partners**: title, logo, optional website URL and display order.
 
-## Speaker records
-Create records under Speakers. Set portrait using Featured Image; enter Speaker Name, Title/Designation, Company Name, Company Logo, and Display Order. The logo source may be 600 × 300 px.
+## Elementor widgets
+- Speaker Marquee
+- Sponsor Marquee
+- Media Partners Marquee
 
-## Elementor widget
-- Built-in speaker card by default.
-- Optional saved Elementor template selection.
-- Number of speakers, card width, gap, speed, direction, pause on hover, background, and accent controls.
-- One speaker is rendered as a centered static card with constrained width.
-- Two or more speakers render as a continuous marquee, ordered by Display Order.
-- For a saved card template, create an Elementor Template first, use Speaker Profile Manager Dynamic Tags for name/title/company/logo, then select it in the widget.
+Both partner marquee widgets include direction (Right to Left / Left to Right), duration, pause-on-hover, and sizing controls. Sponsor cards include a tier footer; media partners use compact logo tiles.
 
-## Notes
-The template option renders the saved Elementor template once for each speaker while setting the current post context. Verify your particular template widgets/dynamic tags on staging before publishing. Marquee animation respects reduced-motion preferences.
+## Upgrade
+Install over Speaker Profile Manager 1.3.1 using the same plugin slug. Existing speaker post type and metadata keys are preserved. WordPress may ask to confirm replacement of the installed plugin.
+
+Requires WordPress 6.0+, PHP 7.4+, and Elementor for the widgets.
