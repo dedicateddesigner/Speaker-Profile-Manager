@@ -1,6 +1,6 @@
 # Event Profile Manager
 
-Version 1.4.5
+Version 1.4.7
 
 Manage speaker profiles, sponsors and media partners, and display them with Elementor widgets.
 
@@ -43,3 +43,6 @@ Fixes the visible join between duplicated marquee groups by including trailing g
 
 ### v1.4.6
 Renamed the plugin display name to Event Profile Manager and explicitly maps standard WordPress post capabilities for the Speakers, Sponsors, and Media Partners post types, allowing users with the standard Editor role to manage entries.
+
+### v1.4.7
+Admin lists now show logo/portrait previews and native WordPress Order values for Speakers, Sponsors, and Media Partners. Removed duplicate custom Display Order fields; Elementor marquees use the built-in Post Attributes → Order value.

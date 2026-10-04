@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Event Profile Manager
  * Description: Manage speakers, sponsors and media partners with Elementor marquee widgets.
- * Version: 1.4.6
+ * Version: 1.4.7
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.4.6');
+define('SPM_VERSION', '1.4.7');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
@@ -57,7 +57,6 @@ function spm_render_partner_meta($post) {
     $logo = absint(get_post_meta($post->ID, '_spm_partner_logo', true));
     $tier = get_post_meta($post->ID, '_spm_partner_tier', true);
     $url = get_post_meta($post->ID, '_spm_partner_url', true);
-    $order = get_post_meta($post->ID, '_spm_partner_order', true);
     $logo_url = $logo ? wp_get_attachment_image_url($logo, 'medium') : '';
     ?>
     <p><label><strong><?php esc_html_e('Logo', 'speaker-profile-manager'); ?></strong></label><br>
@@ -69,7 +68,6 @@ function spm_render_partner_meta($post) {
     <p><label for="spm_partner_tier"><strong><?php esc_html_e('Partner Tier / Label', 'speaker-profile-manager'); ?></strong></label><br><input type="text" class="widefat" id="spm_partner_tier" name="spm_partner_tier" value="<?php echo esc_attr($tier); ?>" placeholder="Silver Partner"></p>
     <?php endif; ?>
     <p><label for="spm_partner_url"><strong><?php esc_html_e('Website URL (optional)', 'speaker-profile-manager'); ?></strong></label><br><input type="url" class="widefat" id="spm_partner_url" name="spm_partner_url" value="<?php echo esc_attr($url); ?>"></p>
-    <p><label for="spm_partner_order"><strong><?php esc_html_e('Display Order', 'speaker-profile-manager'); ?></strong></label><br><input type="number" min="1" id="spm_partner_order" name="spm_partner_order" value="<?php echo esc_attr($order === '' ? '1' : $order); ?>"></p>
     <?php
 }
 function spm_save_partner_meta($post_id) {
@@ -79,13 +77,32 @@ function spm_save_partner_meta($post_id) {
     if (isset($_POST['spm_partner_logo'])) { $id=absint($_POST['spm_partner_logo']); if ($id && wp_attachment_is_image($id)) update_post_meta($post_id,'_spm_partner_logo',$id); else delete_post_meta($post_id,'_spm_partner_logo'); }
     if (isset($_POST['spm_partner_tier'])) update_post_meta($post_id,'_spm_partner_tier',sanitize_text_field(wp_unslash($_POST['spm_partner_tier'])));
     if (isset($_POST['spm_partner_url'])) update_post_meta($post_id,'_spm_partner_url',esc_url_raw(wp_unslash($_POST['spm_partner_url'])));
-    if (isset($_POST['spm_partner_order'])) update_post_meta($post_id,'_spm_partner_order',max(1,absint($_POST['spm_partner_order'])));
 }
 add_action('save_post', 'spm_save_partner_meta');
 
+function spm_partner_admin_columns($columns) {
+    return array('cb'=>$columns['cb'] ?? '', 'title'=>__('Title','speaker-profile-manager'), 'spm_partner_logo'=>__('Logo','speaker-profile-manager'), 'spm_partner_order'=>__('Order','speaker-profile-manager'), 'date'=>$columns['date'] ?? __('Date','speaker-profile-manager'));
+}
+foreach (array('spm_sponsor','spm_media_partner') as $spm_partner_type) {
+    add_filter('manage_'.$spm_partner_type.'_posts_columns', 'spm_partner_admin_columns');
+}
+function spm_partner_admin_column_content($column, $post_id) {
+    if ($column === 'spm_partner_logo') {
+        $logo = absint(get_post_meta($post_id, '_spm_partner_logo', true));
+        if ($logo) echo wp_get_attachment_image($logo, array(72,48), false, array('style'=>'width:72px;height:48px;object-fit:contain;'));
+        else echo '&mdash;';
+    }
+    if ($column === 'spm_partner_order') echo esc_html((int) get_post_field('menu_order', $post_id));
+}
+foreach (array('spm_sponsor','spm_media_partner') as $spm_partner_type) {
+    add_action('manage_'.$spm_partner_type.'_posts_custom_column', 'spm_partner_admin_column_content', 10, 2);
+    add_filter('manage_edit-'.$spm_partner_type.'_sortable_columns', function($columns) { $columns['spm_partner_order'] = 'menu_order'; return $columns; });
+}
+
+
 
 function spm_register_meta_fields() {
-    foreach (array('_speaker_name' => 'string', '_speaker_title' => 'string', '_speaker_company' => 'string', '_speaker_company_logo' => 'integer', '_speaker_order' => 'integer') as $key => $type) {
+    foreach (array('_speaker_name' => 'string', '_speaker_title' => 'string', '_speaker_company' => 'string', '_speaker_company_logo' => 'integer') as $key => $type) {
         register_post_meta('spm_speaker', $key, array(
             'type' => $type, 'single' => true, 'show_in_rest' => true,
             'sanitize_callback' => 'spm_sanitize_meta',
@@ -107,7 +124,6 @@ function spm_render_meta_box($post) {
     $title = get_post_meta($post->ID, '_speaker_title', true);
     $company = get_post_meta($post->ID, '_speaker_company', true);
     $logo = absint(get_post_meta($post->ID, '_speaker_company_logo', true));
-    $order = get_post_meta($post->ID, '_speaker_order', true);
     $logo_url = $logo ? wp_get_attachment_image_url($logo, 'medium') : '';
     ?>
     <style>.spm-field{margin:0 0 22px}.spm-field label{display:block;font-weight:600;margin-bottom:7px}.spm-field input[type=text],.spm-field input[type=number],.spm-field textarea{width:100%;max-width:650px}.spm-logo-preview{display:block;max-width:240px;max-height:120px;margin:10px 0;object-fit:contain}.spm-help{color:#646970;font-size:12px}</style>
@@ -122,7 +138,6 @@ function spm_render_meta_box($post) {
       <button type="button" class="button" id="spm_remove_logo" style="<?php echo $logo_url ? '' : 'display:none;'; ?>">Remove Logo</button>
       <p class="spm-help">Use the same logo in the profile and marquee. Set Object Fit: Contain in Elementor.</p>
     </div>
-    <div class="spm-field"><label for="spm_speaker_order">Display Order</label><input type="number" min="1" step="1" id="spm_speaker_order" name="spm_speaker_order" value="<?php echo esc_attr($order === '' ? '1' : $order); ?>"><p class="spm-help">1 appears first, 2 appears second, and so on. Use unique numbers.</p></div>
     <p class="spm-help">Speaker portrait: use the Featured Image panel.</p>
     <?php
 }
@@ -138,7 +153,6 @@ function spm_save_speaker_meta($post_id) {
         if ($id && wp_attachment_is_image($id)) update_post_meta($post_id, '_speaker_company_logo', $id);
         else delete_post_meta($post_id, '_speaker_company_logo');
     }
-    if (isset($_POST['spm_speaker_order'])) update_post_meta($post_id, '_speaker_order', max(1, absint($_POST['spm_speaker_order'])));
 }
 add_action('save_post_spm_speaker', 'spm_save_speaker_meta');
 
@@ -158,26 +172,13 @@ add_filter('manage_spm_speaker_posts_columns', 'spm_speaker_columns');
 function spm_speaker_column_content($column, $post_id) {
     if ($column === 'speaker_name') echo esc_html(get_post_meta($post_id, '_speaker_name', true));
     if ($column === 'speaker_company') echo esc_html(get_post_meta($post_id, '_speaker_company', true));
-    if ($column === 'speaker_order') { $order=get_post_meta($post_id,'_speaker_order',true); echo esc_html($order===''?'1':$order); echo '<div class="hidden" id="spm-order-'.esc_attr($post_id).'">'.esc_html($order===''?'1':$order).'</div>'; }
+    if ($column === 'speaker_order') echo esc_html((int) get_post_field('menu_order', $post_id));
     if ($column === 'speaker_image') echo get_the_post_thumbnail($post_id, array(50,50));
 }
 add_action('manage_spm_speaker_posts_custom_column', 'spm_speaker_column_content', 10, 2);
-add_filter('manage_edit-spm_speaker_sortable_columns', function($columns){$columns['speaker_order']='speaker_order';return $columns;});
-add_action('pre_get_posts', function($query){if(is_admin()&&$query->is_main_query()&&$query->get('orderby')==='speaker_order'){$query->set('meta_key','_speaker_order');$query->set('orderby','meta_value_num');}});
+add_filter('manage_edit-spm_speaker_sortable_columns', function($columns){$columns['speaker_order']='menu_order';return $columns;});
+add_action('pre_get_posts', function($query){if(is_admin()&&$query->is_main_query()&&$query->get('post_type')==='spm_speaker'&&$query->get('orderby')==='menu_order')$query->set('orderby','menu_order');});
 
-function spm_quick_edit_order_field($column_name, $post_type) {
-    if ($post_type !== 'spm_speaker' || $column_name !== 'speaker_order') return;
-    ?>
-    <fieldset class="inline-edit-col-right"><div class="inline-edit-col"><label><span class="title">Display Order</span><span class="input-text-wrap"><input type="number" min="1" step="1" name="spm_speaker_order" class="spm-quick-order" value=""></span></label></div></fieldset>
-    <?php
-}
-add_action('quick_edit_custom_box', 'spm_quick_edit_order_field', 10, 2);
-function spm_save_quick_edit_order($post_id) {
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    if (!isset($_POST['spm_speaker_order']) || !current_user_can('edit_post',$post_id) || get_post_type($post_id)!=='spm_speaker') return;
-    update_post_meta($post_id, '_speaker_order', max(1, absint($_POST['spm_speaker_order'])));
-}
-add_action('save_post_spm_speaker', 'spm_save_quick_edit_order', 20);
 
 function spm_register_elementor_dynamic_tags($dynamic_tags) {
     if (!did_action('elementor/loaded') || !class_exists('\Elementor\Core\DynamicTags\Tag')) return;
@@ -275,7 +276,7 @@ function spm_register_elementor_widget($widgets_manager) {
             protected function render(){
                 $s=$this->get_settings_for_display();
                 $limit=max(1,absint($s['limit']?:6));
-                $q=new \WP_Query(array('post_type'=>'spm_speaker','post_status'=>'publish','posts_per_page'=>$limit,'meta_key'=>'_speaker_order','orderby'=>array('meta_value_num'=>'ASC','date'=>'ASC'),'order'=>'ASC','no_found_rows'=>true));
+                $q=new \WP_Query(array('post_type'=>'spm_speaker','post_status'=>'publish','posts_per_page'=>$limit,'orderby'=>array('menu_order'=>'ASC','date'=>'ASC'),'order'=>'ASC','no_found_rows'=>true));
                 if(!$q->have_posts())return;
                 $items=$q->posts;
                 $count=count($items);
@@ -364,7 +365,7 @@ function spm_register_partner_widgets($widgets_manager) {
     }
 }
 function spm_render_partner_marquee($post_type,$settings,$sponsor) {
-    $q=new WP_Query(array('post_type'=>$post_type,'post_status'=>'publish','posts_per_page'=>max(1,absint($settings['limit']??12)),'meta_key'=>'_spm_partner_order','orderby'=>array('meta_value_num'=>'ASC','date'=>'ASC'),'order'=>'ASC','no_found_rows'=>true));
+    $q=new WP_Query(array('post_type'=>$post_type,'post_status'=>'publish','posts_per_page'=>max(1,absint($settings['limit']??12)),'orderby'=>array('menu_order'=>'ASC','date'=>'ASC'),'order'=>'ASC','no_found_rows'=>true));
     if (!$q->have_posts()) return;
     $direction=($settings['direction']??'left')==='right'?'reverse':'normal';
     $duration=max(5,absint($settings['speed']??28));
