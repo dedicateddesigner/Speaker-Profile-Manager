@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Event Profile Manager
  * Description: Manage speakers, sponsors and media partners with Elementor marquee widgets.
- * Version: 1.4.7
+ * Version: 1.4.8
  * Author: Dedicated Designer
  * Text Domain: speaker-profile-manager
  * Requires at least: 6.0
@@ -10,7 +10,7 @@
  */
 if (!defined('ABSPATH')) exit;
 
-define('SPM_VERSION', '1.4.7');
+define('SPM_VERSION', '1.4.8');
 define('SPM_URL', plugin_dir_url(__FILE__));
 
 function spm_register_speaker_cpt() {
